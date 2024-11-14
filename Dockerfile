@@ -1,30 +1,24 @@
 # Usa la imagen base de Odoo versión 17
 FROM odoo:17.0
 
+USER root
+
 # Actualiza e instala las dependencias necesarias del sistema
 RUN apt-get update && apt-get install -y \
     python3-pip \
-    build-essential \
-    libxml2-dev \
-    libxslt1-dev \
-    zlib1g-dev \
-    libsasl2-dev \
-    libldap2-dev \
-    libjpeg-dev \
-    libpq-dev \
-    libssl-dev \
-    libffi-dev \
-    libblas-dev \
-    libatlas-base-dev \
     ffmpeg && apt-get clean
 
 # Actualiza pip e instala las dependencias de Python necesarias
 RUN pip3 install --upgrade pip
-RUN pip3 install cloudinary pyjwt python-dotenv cohere
+RUN pip3 install python-dotenv 
 
 # Instala whisper de OpenAI y las dependencias desde el repositorio
 RUN pip3 install -U openai-whisper
-RUN pip3 install git+https://github.com/openai/whisper.git
+RUN pip3 install cohere
+
+# Instala PyTorch para CPU
+RUN pip3 install torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip3 install "numpy<2"
 
 # Copia el archivo de configuración personalizado de Odoo
 COPY ./config_odoo/odoo.conf /etc/odoo/odoo.conf
@@ -43,5 +37,6 @@ ENV PASSWORD=myodootest
 # Exponer el puerto de Odoo
 EXPOSE 8069
 
-# Comando para iniciar Odoo
-CMD ["odoo"]
+# Comando para iniciar Odoo con la ruta correcta a los módulos
+# CMD ["python3", "/usr/bin/odoo", "-r", "odoo", "-w", "myodootest", "--addons-path=/mnt/extra-addons", "-d", "odoo", "-i", "base,ia"]
+ENTRYPOINT ["/usr/bin/odoo", "-c", "/etc/odoo/odoo.conf"]

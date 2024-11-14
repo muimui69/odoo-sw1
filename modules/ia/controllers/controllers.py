@@ -9,8 +9,16 @@ import mimetypes
 from odoo import http
 from odoo.http import request
 from dotenv import load_dotenv
+import torch
 
 load_dotenv()
+
+
+if not torch.cuda.is_available():
+    torch.device("cpu")
+    torch.set_default_tensor_type(torch.FloatTensor)
+
+model = whisper.load_model("base")
 
 class IAProcessingController(http.Controller):
     
@@ -104,7 +112,7 @@ class IAProcessingController(http.Controller):
             with open(audio_path, "wb") as f:
                 f.write(audio_file.read())
 
-            model = whisper.load_model("small")
+            # model = whisper.load_model("small")
             result = model.transcribe(audio_path)
             transcription = result["text"]
             print("Transcripción:", transcription)
